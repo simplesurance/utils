@@ -58,6 +58,7 @@ tickets = [];
 others = [];
 
 print '# Tickets'
+
 for line in sys.stdin:
     if hasForbiddenWords(line):
         continue
@@ -71,5 +72,6 @@ for ticket in tickets:
     print '- ' + ticket
 
 print '\n# Others'
+
 for other in others:
     print '- ' + other
