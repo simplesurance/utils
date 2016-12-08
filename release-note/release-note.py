@@ -37,6 +37,10 @@ def createGhLinks(line):
     line = line.replace(commitHash, '')
 
     prNumber = getPrNumber(line)
+
+    if prNumber is None:
+        return line
+
     prNumber = prNumber.replace('#', '')
 
     line = line.replace(
