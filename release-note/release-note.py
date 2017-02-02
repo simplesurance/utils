@@ -25,7 +25,8 @@ def isJunk(line):
 def hasForbiddenWords(line):
     words = [
         'revert',
-        'bugfix'
+        'bugfix',
+        'hotfix'
     ]
 
     for word in words:
@@ -36,27 +37,15 @@ def createGhLinks(line):
     commitHash = getCommitHash(line)
     line = line.replace(commitHash, '')
 
-    prNumber = getPrNumber(line)
-
-    if prNumber is None:
-        return line
-
-    prNumber = prNumber.replace('#', '')
-
-    line = line.replace(
-        ('(#{})').format(prNumber),
-        ('[`{commit}`](https://github.com/simplesurance/sisu/commit/{commit}) ([#{pr}](https://github.com/simplesurance/sisu/pull/{pr}))').format(commit=commitHash, pr=prNumber)
-    )
-
-    return line.strip()
+    return '{subject} {hash}'.format(subject = line.strip(), hash = commitHash)
 
 def generateTicket(line):
-    line = createGhLinks(line)
+    subject = createGhLinks(line)
     ticket = getTicket(line)
-    line = line.replace(('[{}]').format(ticket), ticket.upper());
-    line = line.replace(ticket, ('[{ticket}](https://sisu-agile.atlassian.net/browse/{ticket})').format(ticket=ticket.upper()))
+    # Clean unecessary brackets
+    subject = subject.replace('[{ticket}]'.format(ticket = ticket), ticket)
 
-    return line.strip();
+    return '[{ticket}](https://sisu-agile.atlassian.net/browse/{ticket}) {subject}'.format(ticket = ticket, subject = subject)
 
 tickets = [];
 others = [];
