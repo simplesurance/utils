@@ -44,8 +44,12 @@ def generateTicket(line):
     ticket = getTicket(line)
     # Clean unecessary brackets
     subject = subject.replace('[{ticket}]'.format(ticket = ticket), ticket)
+    subject = subject.replace(
+        '{ticket}'.format(ticket = ticket),
+        '[{ticket}](https://sisu-agile.atlassian.net/browse/{ticket})'.format(ticket = ticket)
+    )
 
-    return '[{ticket}](https://sisu-agile.atlassian.net/browse/{ticket}) {subject}'.format(ticket = ticket, subject = subject)
+    return subject
 
 tickets = [];
 others = [];
