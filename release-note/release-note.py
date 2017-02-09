@@ -34,10 +34,13 @@ def main():
         if hasBlacklistedWords(line, blacklistedWords):
             continue
 
-        if len(getTicket(line)) != 0:
-            tickets.append(generateTicket(line))
-        elif getPrNumber(line) is not None:
-            others.append(createGhLinks(line))
+        issueIds = getIssueIds(line)
+
+        if len(issueIds) == 0:
+            others.append(line.rstrip())
+            continue
+
+        tickets.append(generateIssueUrl(line, issueIds))
 
     for ticket in tickets:
         print '- ' + ticket
@@ -47,14 +50,10 @@ def main():
     for other in others:
         print '- ' + other
 
-
-def getTicket(line):
+def getIssueIds(line):
     m = re.findall('([A-Z]+-[0-9]+)', line, re.IGNORECASE)
 
     return m
-
-def getCommitHash(line):
-    return line [:7]
 
 def getPrNumber(line):
     m = re.search('#[0-9]{4}', line)
@@ -74,29 +73,19 @@ def hasBlacklistedWords(line, words = []):
         if word in line.lower():
             return True
 
-def createGhLinks(line):
-    commitHash = getCommitHash(line)
-    line = line.replace(commitHash, '')
-
-    return '{subject} {hash}'.format(subject = line.strip(), hash = commitHash)
-
-def generateTicket(line):
-    subject = createGhLinks(line)
-    tickets = getTicket(line)
-
-    # Clean unecessary brackets
-    for ticket in tickets:
-        subject = subject.replace('[{ticket}]'.format(ticket = ticket), ticket)
-        subject = subject.replace(
-            '{ticket}'.format(ticket = ticket),
-            '[{ticket}](https://sisu-agile.atlassian.net/browse/{ticket})'.format(ticket = ticket)
+def generateIssueUrl(line, issueIds):
+    for issueId in issueIds:
+        line = line.replace('[{issueId}]'.format(issueId = issueId), issueId)
+        line = line.replace(
+            '{issueId}'.format(issueId = issueId),
+            '[{issueId}](https://sisu-agile.atlassian.net/browse/{issueId})'.format(issueId = issueId.upper())
         )
 
-    return subject
+    return line.rstrip()
 
 def usage():
     print '\n'
-    print 'Usage: git log --oneline | release-note.py \n'
+    print 'Usage: git log upstream/master..upstream/develop --format=\'%s %h\' --no-merges | release-note.py \n'
     print 'Generates release notes from the git commit log. \n'
     print '  --help, -h  \t Display this help. \n'
     print 'Exclude lines lines by filtering keywords:'
