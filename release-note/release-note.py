@@ -83,9 +83,9 @@ def generateIssueUrl(line, issueIds):
 
 def usage():
     print '\n'
-    print 'Usage: git log upstream/master..upstream/develop --format=\'%s %h\' --no-merges | release-note.py \n'
+    print 'Usage: git log master..develop --format=\'%s %h\' --no-merges | release-note.py \n'
     print 'Generates release notes from the git commit log. \n'
-    print '  --help, -h  \t Display this help. \n'
+    print '  --help, -h     Display this help. \n'
     print 'Exclude lines lines by filtering keywords:'
     print formatKeyword('hotfix')
     print formatKeyword('bugfix')
