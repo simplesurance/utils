@@ -69,7 +69,7 @@ def isJunk(line):
 
     return True
 
-def hasBlacklistedWords(line, words = []):
+def hasBlacklistedWords(line, words):
     for word in words:
         if word in line.lower():
             return True
