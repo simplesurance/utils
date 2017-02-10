@@ -1,8 +1,8 @@
-import sys, re, getopt, pprint
+import sys, re, getopt
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'h', ['help', 'no-bugfix', 'no-revert', 'no-hotfix'])
+        opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help', 'no-bugfix', 'no-revert', 'no-hotfix'])
     except getopt.GetoptError as err:
         print str(err)
         usage()
@@ -10,7 +10,7 @@ def main():
 
     blacklistedWords = [];
 
-    for o, a in opts:
+    for o, _ in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit()
