@@ -2,24 +2,27 @@ import sys, re, getopt
 
 def main():
     try:
-        opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help', 'no-bugfix', 'no-revert', 'no-hotfix'])
+        opts, _ = getopt.getopt(sys.argv[1:], 'h', ['help', 'no-bugfix', 'no-revert', 'no-hotfix', 'jira-url='])
     except getopt.GetoptError as err:
         print str(err)
         usage()
         sys.exit(2)
 
     blacklistedWords = [];
+    jiraUrl = '';
 
-    for o, _ in opts:
+    for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit()
-        elif o in ("--no-bugfix"):
+        elif "--no-bugfix" == o:
             blacklistedWords.append('bugfix')
-        elif o in ("--no-revert"):
+        elif "--no-revert" == o:
             blacklistedWords.append('revert')
-        elif o in ("--no-hotfix"):
+        elif "--no-hotfix" == o:
             blacklistedWords.append('hotfix')
+        elif "--jira-url" == o:
+            jiraUrl = a;
         else:
             assert False, "unhandled option"
 
@@ -38,7 +41,7 @@ def main():
             others.append(line.rstrip())
             continue
 
-        tickets.append(generateIssueUrl(line, issueIds))
+        tickets.append(generateIssueUrl(line, issueIds, jiraUrl))
 
     for ticket in tickets:
         print '- ' + ticket
@@ -71,21 +74,27 @@ def hasBlacklistedWords(line, words = []):
         if word in line.lower():
             return True
 
-def generateIssueUrl(line, issueIds):
+def generateIssueUrl(line, issueIds, jiraUrl):
+    line = line.rstrip()
+
+    if '' == jiraUrl:
+        return line
+
     for issueId in issueIds:
         line = line.replace('[{issueId}]'.format(issueId = issueId), issueId)
         line = line.replace(
             '{issueId}'.format(issueId = issueId),
-            '[{issueId}](https://sisu-agile.atlassian.net/browse/{issueId})'.format(issueId = issueId.upper())
+            '[{issueId}]({jiraUrl}/browse/{issueId})'.format(issueId = issueId.upper(), jiraUrl = jiraUrl)
         )
 
-    return line.rstrip()
+    return line
 
 def usage():
     print '\n'
     print 'Usage: git log master..develop --format=\'%s %h\' --no-merges | release-note.py \n'
     print 'Generates release notes from the git commit log. \n'
-    print '  --help, -h     Display this help. \n'
+    print '  --help, -h     Display this help.'
+    print '  --jira-url     Prefix, used to create links from JIRA issue IDs. \n'
     print 'Exclude lines lines by filtering keywords:'
     print formatKeyword('hotfix')
     print formatKeyword('bugfix')
