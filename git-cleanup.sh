@@ -55,14 +55,14 @@ done
 
 echo
 echo "* finding branches that only exist locally"
-echo "  might be unsaved work! be careful! ACHTUNG!"
-ask "do you understand? (y/n)" || exit 0
+echo "  might be work-in-progress branches! be careful! ACHTUNG!"
+ask " do you understand? (y/n)" || exit 0
 ask " really? (y/n)" || exit 0
-ask "then let's continue (y/n)" || exit 0
+ask " then let's continue (y/n)" || exit 0
 
 IFS=$'\n'
 for branch in $(git branch -vv| grep ': gone]'| awk '{ print $1 }'); do
 	if ask "? delete local branch $repository/$branch? (y/n)"; then
-		git push -d "$repository" "$branch"
+		git branch -D "$branch"
 	fi
 done
