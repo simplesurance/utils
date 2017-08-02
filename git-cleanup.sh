@@ -46,7 +46,7 @@ rm_local_branches() {
 
 	IFS=$'\n'
 	for branch in $(git branch -vv| grep ': gone]'| awk '{ print $1 }'); do
-		if ask "? delete local branch $repository/$branch? (y/n)"; then
+		if ask "? delete local branch $branch? (y/n)"; then
 			git branch -D "$branch"
 		fi
 	done
@@ -69,8 +69,8 @@ rm_remote_merged_branches() {
 
 	if ask "? delete those merged branches remotely? (y/n)"; then
 		for ref in $branches; do
-			repository=$(echo $ref | cut -d " " -f 1)
-			branch=$(echo $ref | cut -d " " -f 2)
+			local repository=$(echo $ref | cut -d " " -f 1)
+			local branch=$(echo $ref | cut -d " " -f 2)
 			git push -d "$repository" "$branch"
 		done
 	fi
