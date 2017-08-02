@@ -7,7 +7,7 @@ set -eu
 ask() {
 	local q="$1"
 
-	read -p "$q" -n 1 -r answer
+	read -p "$q" -n 1 answer
 	echo
 
 	if [ "$answer" != "y" -a "$answer" != "Y" ]; then
@@ -15,6 +15,65 @@ ask() {
 	fi
 
 	return 0
+}
+
+rm_local_merged_branches() {
+	echo
+	echo "* finding local branches that have been merged"
+	local branches="$(set +e; git branch --merged $ref_branch| grep -vE "develop|master")"
+
+	if [ -z "$branches" ]; then
+		echo "no branches found"
+		return
+	fi
+
+	echo "$branches"
+	echo
+	if ask "? delete those merged branches locally? (y/n)"; then
+		for branch in $branches; do
+			git branch -D "$branch"
+		done
+	fi
+}
+
+rm_local_branches() {
+	echo
+	echo "* finding branches that only exist locally"
+	echo "  might be work-in-progress branches! be careful! ACHTUNG!"
+	ask " do you understand? (y/n)" || exit 0
+	ask " really? (y/n)" || exit 0
+	ask " then let's continue (y/n)" || exit 0
+
+	IFS=$'\n'
+	for branch in $(git branch -vv| grep ': gone]'| awk '{ print $1 }'); do
+		if ask "? delete local branch $repository/$branch? (y/n)"; then
+			git branch -D "$branch"
+		fi
+	done
+}
+
+rm_remote_merged_branches() {
+	echo
+	echo "* finding remote branches that have been merged"
+	IFS=$'\n'
+	local branches="$(git branch  -r --merged $ref_branch | \
+			  grep -vE "origin/develop|origin/master|origin/HEAD" | \
+			  sed -e 's|origin/|origin |g' -e 's/^[[:space:]]*//g')"
+
+	if [ -z "$branches" ]; then
+		echo "no branches found"
+		return
+	fi
+	echo "$branches"
+	echo
+
+	if ask "? delete those merged branches remotely? (y/n)"; then
+		for ref in $branches; do
+			repository=$(echo $ref | cut -d " " -f 1)
+			branch=$(echo $ref | cut -d " " -f 2)
+			git push -d "$repository" "$branch"
+		done
+	fi
 }
 
 echo "* determining main upstream branch"
@@ -32,37 +91,9 @@ echo
 echo "* removing non-existent remote-tracking references"
 git fetch --prune
 
-echo
-echo "* finding local branches that have been merged"
-for branch in $(git branch --merged $ref_branch| grep -vE "develop|master"); do
-	if ask "? delete merged branch $branch locally? (y/n)"; then
-		git branch -D "$branch"
-	fi
-done
-
-echo
-echo "* finding remote branches that have been merged"
-IFS=$'\n'
-for ref in $(git branch  -r --merged $ref_branch | \
-	     grep -vE "origin/develop|origin/master|origin/HEAD" | \
-	     sed -e 's|origin/|origin |g' -e 's/^[[:space:]]*//g'); do
-	repository=$(echo $ref | cut -d " " -f 1)
-	branch=$(echo $ref | cut -d " " -f 2)
-	if ask "? delete merged branch $repository/$branch remotely? (y/n)"; then
-		git push -d "$repository" "$branch"
-	fi
-done
-
-echo
-echo "* finding branches that only exist locally"
-echo "  might be work-in-progress branches! be careful! ACHTUNG!"
-ask " do you understand? (y/n)" || exit 0
-ask " really? (y/n)" || exit 0
-ask " then let's continue (y/n)" || exit 0
-
-IFS=$'\n'
-for branch in $(git branch -vv| grep ': gone]'| awk '{ print $1 }'); do
-	if ask "? delete local branch $repository/$branch? (y/n)"; then
-		git branch -D "$branch"
-	fi
-done
+echo "-------------------------------------"
+rm_local_merged_branches
+echo "-------------------------------------"
+rm_remote_merged_branches
+echo "-------------------------------------"
+rm_local_branches
