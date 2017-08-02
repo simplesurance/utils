@@ -2,7 +2,7 @@
 
 # vi:set tabstop=8 sts=8 shiftwidth=8 expandtab tw=80
 
-set -eu
+set -u
 
 ask() {
 	local q="$1"
@@ -20,7 +20,8 @@ ask() {
 rm_local_merged_branches() {
 	echo
 	echo "* finding local branches that have been merged"
-	local branches="$(set +e; git branch --merged $ref_branch| grep -vE "develop|master")"
+	local branches="$(git branch --merged $ref_branch|\
+			  grep -vE "develop|master")"
 
 	if [ -z "$branches" ]; then
 		echo "no branches found"
@@ -36,20 +37,42 @@ rm_local_merged_branches() {
 	fi
 }
 
-rm_local_branches() {
+rm_only_local_branches() {
 	echo
 	echo "* finding branches that only exist locally"
+	branches="$(git branch -vv| grep ': gone]'| \
+		    sed -e 's/^[[:space:]]*//g')"
+
+	if [ -z "$branches" ]; then
+		echo "no branches found"
+		return
+	fi
+
 	echo "  might be work-in-progress branches! be careful! ACHTUNG!"
 	ask " do you understand? (y/n)" || exit 0
 	ask " really? (y/n)" || exit 0
 	ask " then let's continue (y/n)" || exit 0
 
 	IFS=$'\n'
-	for branch in $(git branch -vv| grep ': gone]'| awk '{ print $1 }'); do
+	for branch in $branches; do
 		if ask "? delete local branch $branch? (y/n)"; then
 			git branch -D "$branch"
 		fi
 	done
+}
+
+rm_local_branches() {
+	echo
+	echo "* finding local branches"
+
+	IFS=$'\n'
+	for branch in $(git branch | grep -vE "develop|master" | \
+			sed -e 's/^**[[:space:]]*//g'); do
+		if ask "? delete local branch $branch? (y/n)"; then
+			git branch -D "$branch"
+		fi
+	done
+
 }
 
 rm_remote_merged_branches() {
@@ -95,5 +118,7 @@ echo "-------------------------------------"
 rm_local_merged_branches
 echo "-------------------------------------"
 rm_remote_merged_branches
+echo "-------------------------------------"
+rm_only_local_branches
 echo "-------------------------------------"
 rm_local_branches
