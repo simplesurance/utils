@@ -49,9 +49,9 @@ rm_only_local_branches() {
 	fi
 
 	echo "  might be work-in-progress branches! be careful! ACHTUNG!"
-	ask " do you understand? (y/n)" || exit 0
-	ask " really? (y/n)" || exit 0
-	ask " then let's continue (y/n)" || exit 0
+	ask " do you understand? (y/n)" || return
+	ask " really? (y/n)" || return
+	ask " then let's continue (y/n)" || return
 
 	IFS=$'\n'
 	for branch in $branches; do
