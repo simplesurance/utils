@@ -25,7 +25,7 @@ for line in fileinput.input():
     try:
         js = json.loads(line)
     except json.JSONDecodeError:
-        print("could not parse line '%s'" % line)
+        print(line)
         continue
 
     ts = js.get("time_iso8601", "timestamp-unknown")
