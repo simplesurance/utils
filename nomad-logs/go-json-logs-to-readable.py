@@ -17,7 +17,7 @@ def log_lvl_to_str(lvl):
         return "warn"
     elif ilvl == 3:
         return "info"
-    elif ilvlv == 4:
+    elif ilvl == 4:
         return "debug"
     return "unknown"
 
