@@ -56,7 +56,7 @@ if [ -z "$issues" ]; then
 	exit 0
 fi
 
-mail_tmpfile="$(mktemp "kernlog-$HOSTNAME.XXX.txt")"
+mail_tmpfile="$(mktemp "/tmp/kernlog-$HOSTNAME.XXX.txt")"
 trap 'rm -rf "$mail_tmpfile"' EXIT
 
 echo "$log" | perl -pe 'use MIME::QuotedPrint; $_=MIME::QuotedPrint::decode($_);' > "$mail_tmpfile"
