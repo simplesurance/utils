@@ -18,8 +18,12 @@ run_dir="/var/run/kernel_notifications"
 cursor_file="$run_dir/last_cursor"
 grep_expr="BUG|Call Trace|WARNING|protection fault"
 
+errout() { 
+	echo "$@" 1>&2;
+}
+
 if [[ ! -v MAILTO || -z "$MAILTO"  ]]; then
-	echo "\$MAILTO environment variable not set"
+	errout "\$MAILTO environment variable not set"
 	exit 1
 fi
 
@@ -42,7 +46,7 @@ if [ -z "$log" ] || ! echo "$log" | grep -q "\-\- cursor:"; then
 fi
 
 if [ $rv -ne 0 ]; then
-	echo "journalctl exited with code $rv"
+	errout "journalctl exited with code $rv"
 	exit $rv
 fi
 
