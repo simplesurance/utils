@@ -66,8 +66,9 @@ trap 'rm -rf "$mail_tmpfile"' EXIT
 echo "$log" | perl -pe 'use MIME::QuotedPrint; $_=MIME::QuotedPrint::decode($_);' > "$mail_tmpfile"
 
 fqdn="$(hostname -f)"
-echo -e "Found critical kernel log messages on $fqdn.\n"\
-"Kernel logs are attached."\
+echo -e "Found critical kernel log messages on $fqdn.\n\n"\
+"$issues\n\n"\
+"The full kernel logs are attached."\
 | mail --encoding="quoted-printable" --content-type="text/plain" -A "$mail_tmpfile" -s "kernel errors on $fqdn" "$MAILTO"
 
 echo "send kernel log messages to $MAILTO"
