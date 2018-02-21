@@ -14,7 +14,7 @@
 
 set -eu -o pipefail
 
-run_dir="/var/run/kernel_notifications"
+run_dir="/var/tmp/kernel_notifications"
 cursor_file="$run_dir/last_cursor"
 grep_expr="BUG|Call Trace|WARNING|protection fault"
 
