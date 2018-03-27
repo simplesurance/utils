@@ -48,6 +48,6 @@ for srv in $services; do
 
     alloc_ids=$(nomad status $srv| grep "Allocations" -A 1000000| awk '{ print $1 }'|grep -vE 'ID|Allocations')
     for id in $alloc_ids; do
-        nomad logs "$id" | ./go-json-logs-to-readable.py > "$file"
+        nomad logs "$id" | ./jsonlogs2txt.py > "$file"
     done
 done
