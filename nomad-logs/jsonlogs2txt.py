@@ -41,4 +41,9 @@ for line in fileinput.input():
     rem = (", ".join("{!s}={!r}".format(k, v) for (k, v) in
                      js.items())).strip()
 
+    msg = msg.replace('\\n', '\n').replace('\\t', '\t')
+    rem = rem.replace('\\n', '\n').replace('\\t', '\t')
+
     print("%s %s %s %s %s" % (ts, lvl, app, msg, rem))
+    print('-'*80)
+
