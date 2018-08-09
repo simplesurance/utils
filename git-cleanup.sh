@@ -102,7 +102,7 @@ rm_remote_merged_branches() {
 echo "* determining main upstream branch"
 if git branch -a -r| grep develop| grep -q "/develop"; then
 	ref_branch="develop"
-elif git branch -a -r| grep develop| grep -q "/master"; then
+elif git branch -a -r| grep master| grep -q "/master"; then
 	ref_branch="master"
 else
 	echo "master or develop branches doesn't exist in remote"
