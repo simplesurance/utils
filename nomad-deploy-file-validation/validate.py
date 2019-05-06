@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-# The script expects a list  of application directories as argument.
-# It checks that each application directory has a deploy/job.hcl.j2 file.
-# It validates the syntax for each hcl.j2 and *.yml files in deploy/.
+# The script expects a list of directories that contain *.hcl.j2 and *.yml
+# files. It validates the syntax of each of those files.
 
 import argparse
 import glob2
@@ -16,7 +15,6 @@ from ansible.template.template import AnsibleJ2Template
 from functools import reduce, namedtuple
 from jinja2schema import infer, model
 
-deploy_dir = 'deploy/'
 deploy_job_file = 'job.hcl.j2'
 
 # stubs definition of macros that are not default for jinja templates
@@ -43,12 +41,6 @@ def deploy_config_template(filename):
             path=filename,
             content=reduce(lambda content, target: content.replace(*target), replace_map, f.read())
         )
-
-
-def deploy_job_filet(deploy_dir):
-    return os.path.isfile(
-        os.path.join(deploy_dir, deploy_job_file)
-    )
 
 
 class StubValue:
@@ -124,15 +116,14 @@ def main():
         "-i",
         "--ignore-missing-job-file",
         action="store_true",
-        help="do not check if the %s/%s file is missing" %
-             (deploy_dir, deploy_job_file)
+        help="do not check if the %s file is missing" %
+             deploy_job_file
     )
 
     parser.add_argument(
-        'appdir',
+        'deploydir',
         nargs='+',
-        help="application directories, " +
-             "deploy files must be in a 'deploy' subdirectory",
+        help="directories to validate",
     )
 
     args = parser.parse_args()
@@ -141,17 +132,19 @@ def main():
     file_validation_cnt = 0
     dir_validation_cnt = 0
 
-    for app_dir in args.appdir:
-        deploy_path = os.path.join(app_dir, deploy_dir)
+    for deploy_dir in args.deploydir:
+        if not os.path.isdir(deploy_dir):
+            print("application directory '%s' does not exist" % deploy_dir)
+            error_cnt += 1
 
         dir_validation_cnt += 1
 
-        job_file = os.path.join(deploy_path, deploy_job_file)
+        job_file = os.path.join(deploy_dir, deploy_job_file)
         if not args.ignore_missing_job_file and not os.path.isfile(job_file):
             print("%s: file missing" % (job_file))
             error_cnt += 1
 
-        deploy_files = glob2.glob(os.path.join(deploy_path, "**"))
+        deploy_files = glob2.glob(os.path.join(deploy_dir, "**"))
         for file in deploy_files:
             if not os.path.isfile(file):
                 continue
