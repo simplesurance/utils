@@ -5,7 +5,7 @@
 # It validates the syntax for each hcl.j2 and *.yml files in deploy/.
 
 import argparse
-import glob
+import glob2
 import hcl
 import io
 import os
@@ -142,7 +142,7 @@ def main():
             print("%s: file missing" % (job_file))
             error_cnt += 1
 
-        deploy_files = glob.glob(os.path.join(deploy_path, "*"))
+        deploy_files = glob2.glob(os.path.join(deploy_path, "**"))
         for file in deploy_files:
             if not os.path.isfile(file):
                 continue
