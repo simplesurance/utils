@@ -128,15 +128,19 @@ def main():
 
     args = parser.parse_args()
 
-    errors_found = False
+    error_cnt = 0
+    file_validation_cnt = 0
+    dir_validation_cnt = 0
 
     for app_dir in args.appdir:
         deploy_path = os.path.join(app_dir, deploy_dir)
 
+        dir_validation_cnt += 1
+
         job_file = os.path.join(deploy_path, deploy_job_file)
         if not os.path.isfile(job_file):
             print("%s: file missing" % (job_file))
-            errors_found = True
+            error_cnt += 1
 
         deploy_files = glob.glob(os.path.join(deploy_path, "*"))
         for file in deploy_files:
@@ -144,6 +148,7 @@ def main():
                 continue
 
             try:
+                file_validation_cnt += 1
                 if file.endswith("hcl.j2"):
                     validate_j2_hcl(file)
                 elif file.endswith(".yml"):
@@ -155,13 +160,13 @@ def main():
                 if args.debug:
                     print("%s: ok" % file)
             except Exception as e:
-                errors_found = True
+                error_cnt += 1
                 print("%s: validation failed: %s " % (file, e))
 
-    if errors_found:
+    print("* validated %s files in %s directories, %s issues found " %
+          (file_validation_cnt, dir_validation_cnt, error_cnt))
+    if error_cnt > 0:
         sys.exit(1)
-
-    print("no issues found")
 
 
 main()
