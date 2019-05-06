@@ -116,8 +116,7 @@ def main():
     parser.add_argument(
         "-d",
         "--debug",
-        type=bool,
-        default=False,
+        action="store_true",
         help="show which files validates successfully, instead of only errors",
     )
     parser.add_argument(
