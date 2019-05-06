@@ -163,7 +163,8 @@ def main():
                 elif file.endswith(".yml"):
                     validate_yaml(file)
                 else:
-                    print("skipping file in unsupported format: %s" % file)
+                    if args.debug:
+                        print("skipping file in unsupported format: %s" % file)
                     continue
 
                 if args.debug:
