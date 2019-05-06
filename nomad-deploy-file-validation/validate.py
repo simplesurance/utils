@@ -119,6 +119,15 @@ def main():
         action="store_true",
         help="show which files validates successfully, instead of only errors",
     )
+
+    parser.add_argument(
+        "-i",
+        "--ignore-missing-job-file",
+        action="store_true",
+        help="do not check if the %s/%s file is missing" %
+             (deploy_dir, deploy_job_file)
+    )
+
     parser.add_argument(
         'appdir',
         nargs='+',
@@ -138,7 +147,7 @@ def main():
         dir_validation_cnt += 1
 
         job_file = os.path.join(deploy_path, deploy_job_file)
-        if not os.path.isfile(job_file):
+        if not args.ignore_missing_job_file and not os.path.isfile(job_file):
             print("%s: file missing" % (job_file))
             error_cnt += 1
 
