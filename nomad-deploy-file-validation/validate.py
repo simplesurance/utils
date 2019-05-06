@@ -161,5 +161,7 @@ def main():
     if errors_found:
         sys.exit(1)
 
+    print("no issues found")
+
 
 main()
