@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # The script expects a list  of application directories as argument.
 # It checks that each application directory has a deploy/job.hcl.j2 file.
 # It validates the syntax for each hcl.j2 and *.yml files in deploy/.
