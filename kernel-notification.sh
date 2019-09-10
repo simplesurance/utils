@@ -32,7 +32,10 @@ mkdir -p "$run_dir"
 args="-q -k --show-cursor"
 if [ -f "$cursor_file" ]; then
 	cursor=$(cat "$cursor_file")
-	args="$args --after-cursor=$cursor"
+
+	if [ -n "$cursor" ]; then
+		args="$args --after-cursor=$cursor"
+	fi
 fi
 
 set +e
@@ -47,6 +50,9 @@ fi
 
 if [ $rv -ne 0 ]; then
 	errout "journalctl exited with code $rv"
+	# it might be that journald failed because the cursor was invalid or
+	# does not exist anymore, remove the cursor_file
+	rm -f "$cursor_file"
 	exit $rv
 fi
 
