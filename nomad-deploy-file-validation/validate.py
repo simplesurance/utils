@@ -90,6 +90,7 @@ def validate_hcl(hcl_cfg):
     json_config = hcl.load(io.StringIO(hcl_cfg))
     assert isinstance(json_config, dict), "not valid json configuration format, root value must be an object"
     assert 'job' in json_config, "configuration has not 'Job' definition inside a root object"
+    assert json_config['job']['1']['meta']['alerting_slack'] in ['platform-alerts','frontend-alerts','policy-alerts','claim-support'] , "Job meta 'alerting_slack' has to be configured with one of 'platform-alerts','frontend-alerts','policy-alerts','claim-support'"
 
 
 def validate_yaml(file):
