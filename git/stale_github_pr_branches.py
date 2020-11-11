@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 import argparse
+import time
 import urllib2
 import json
 import re
@@ -43,16 +44,36 @@ def extract_links(l):
     return (next_link, last_link)
 
 
+def http_get_retry(req):
+    MAX_TRIES = 10
+    RETRY_SLEEP_TIMEOUT_SEC = 3
+
+    for i in range(MAX_TRIES):
+        try:
+            return urllib2.urlopen(req)
+        except urllib2.URLError as e:
+            print("github request failed (try %s/%s): %s" % (
+                  i+1, MAX_TRIES, e))
+
+            if i < MAX_TRIES - 1:
+                print("retrying in %s seconds" % (RETRY_SLEEP_TIMEOUT_SEC))
+                time.sleep(RETRY_SLEEP_TIMEOUT_SEC)
+            else:
+                raise(e)
+
 def http_get(url, base64auth):
     all_data = []
     hdrs = {'Content-Type': 'application/json',
-            'Authorization': base64auth}
+            'Authorization': base64auth,
+            'Accept': 'application/vnd.github.v3+json',
+           }
 
     while True:
         eprint("HTTP-GET %s" % url)
 
         req = urllib2.Request(url, headers=hdrs)
-        resp = urllib2.urlopen(req)
+        resp = http_get_retry(req)
+
         data = json.loads(resp.read())
         all_data += data
 
