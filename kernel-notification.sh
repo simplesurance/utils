@@ -18,7 +18,7 @@ run_dir="/var/tmp/kernel_notifications"
 cursor_file="$run_dir/last_cursor"
 grep_expr="BUG|Call Trace|WARNING|protection fault"
 
-errout() { 
+errout() {
 	echo "$@" 1>&2;
 }
 
@@ -39,7 +39,7 @@ if [ -f "$cursor_file" ]; then
 fi
 
 set +e
-log="$(journalctl $args)"
+log="$(journalctl $args | grep -v 'SRV-2-SRV:')"
 rv=$?
 set -e
 
