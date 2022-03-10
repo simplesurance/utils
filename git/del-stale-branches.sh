@@ -21,7 +21,7 @@ rm_local_merged_branches() {
 	echo
 	echo "* finding local branches that have been merged"
 	local branches="$(git branch --merged $ref_branch|\
-			  grep -vE "develop|master")"
+			  grep -vE "develop|master|main")"
 
 	if [ -z "$branches" ]; then
 		echo "no branches found"
@@ -40,8 +40,7 @@ rm_local_merged_branches() {
 rm_only_local_branches() {
 	echo
 	echo "* finding branches that only exist locally"
-	branches="$(git branch -vv| grep ': gone]'| \
-		    sed -e 's/^[[:space:]]*//g')"
+	branches="$(git branch -vv| grep ': gone]'|  sed -e 's/^[[:space:]]*//g')"
 
 	if [ -z "$branches" ]; then
 		echo "no branches found"
@@ -66,7 +65,7 @@ rm_local_branches() {
 	echo "* finding local branches"
 
 	IFS=$'\n'
-	for branch in $(git branch | grep -vE "develop|master" | \
+	for branch in $(git branch | grep -vE "develop|master|main" | \
 			sed -e 's/^**[[:space:]]*//g'); do
 		if ask "? delete local branch $branch? (y/n)"; then
 			git branch -D "$branch"
@@ -80,7 +79,7 @@ rm_remote_merged_branches() {
 	echo "* finding remote branches that have been merged"
 	IFS=$'\n'
 	local branches="$(git branch  -r --merged $ref_branch | \
-			  grep -vE "origin/develop|origin/master|origin/HEAD" | \
+			  grep -vE "origin/develop|origin/master|origin/main|origin/HEAD" | \
 			  sed -e 's|origin/|origin |g' -e 's/^[[:space:]]*//g')"
 
 	if [ -z "$branches" ]; then
@@ -102,10 +101,12 @@ rm_remote_merged_branches() {
 echo "* determining main upstream branch"
 if git branch -a -r| grep develop| grep -q "/develop"; then
 	ref_branch="develop"
+elif git branch -a -r| grep master| grep -q "/main"; then
+	ref_branch="main"
 elif git branch -a -r| grep master| grep -q "/master"; then
 	ref_branch="master"
 else
-	echo "master or develop branches doesn't exist in remote"
+	echo "master, main or develop branches doesn't exist in remote"
 	exit 1
 fi
 echo "reference upstream branch is $ref_branch"
