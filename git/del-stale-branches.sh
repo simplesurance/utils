@@ -53,7 +53,8 @@ rm_only_local_branches() {
 	ask " then let's continue (y/n)" || return
 
 	IFS=$'\n'
-	for branch in $branches; do
+	for line in $branches; do
+		branch="$(echo -n "$line" | awk '{ print $1 }')"
 		if ask "? delete local branch $branch? (y/n)"; then
 			git branch -D "$branch"
 		fi
