@@ -1,0 +1,143 @@
+# do not load if not an interactive shell
+[[ $- == *i* ]] || return
+
+_context_usage() {
+  echo
+	echo "Usage: set-nomad-context [OPTION]... -e ENV -p PROJECT -r REGION -n NAMESPACE
+
+Mandatory Arguments:
+  -e, --environment staging|production|<sandbox-name>
+  -p, --project sisu|tmnf
+  -r, --region eu|jp
+  -n, --namespace default|infra
+  -c, --clear
+
+Options:
+  -h | --help" 1>&2
+}
+
+_context_short() {
+	case "$1" in
+		staging) echo "stg" ;;
+		production) echo "prd" ;;
+		sb-*) echo "sandbox" ;;
+		*) return 1 ;;
+	esac
+}
+
+_context_nomad_host() {
+	local prj="$1"
+	local env="$2"
+	local reg="$3"
+  local s
+
+	if [[ "$env" =~ ^sb- ]]; then
+		echo "nomad-ui.${env%.sisu.sh}.sisu.sh"
+    return
+	fi
+
+  s="$(_context_short "${env}")"
+	if [ "$prj" = "tmnf" ]; then
+		echo "${prj}-nomad-${s}-${reg}.sisu.sh"
+	else
+		echo "nomad-${s}-${reg}.sisu.sh"
+	fi
+}
+
+_context_try_to_get_nomad_mgmt_token_from_sandbox() {
+	local sb="$1"
+	ssh "ansible@${sb%%.*}.sisu.sh" "sudo grep Secret /etc/nomad.d/mgmt.token" | awk '{print $4}' || return 1
+}
+
+_context_clear_vars() {
+  unset NOMAD_ADDR
+  unset NOMAD_CONTEXT
+  unset NOMAD_NAMESPACE
+  unset NOMAD_TOKEN
+}
+
+set-nomad-context() {
+  local parsed_arguments SHORT_ENV nomad_host
+  local HELP=0
+  local ENVIRONMENT="unset"
+  local PROJECT="unset"
+  local REGION="unset"
+  local CLEAR=0
+  NOMAD_NAMESPACE="default"
+
+  parsed_arguments=$(getopt -a -n set-nomad-context -o che:p:r:n: \
+    --long clear,help,environment:,project:,region:,namespace: -- "$@") \
+    || { _context_usage ; return 1 ;}
+  eval set -- "$parsed_arguments"
+
+  while :
+  do
+    case "$1" in
+      -h | --help)         HELP=1               ; shift ;;
+      -c | --clear)        CLEAR=1              ; shift ;;
+      -e | --environment)  ENVIRONMENT="$2"     ; shift 2 ;;
+      -p | --project)      PROJECT="$2"         ; shift 2 ;;
+      -r | --region)       REGION="$2"          ; shift 2 ;;
+      -n | --namespace)    NOMAD_NAMESPACE="$2" ; shift 2 ;;
+      --) shift; break ;;
+      *) echo "Unexpected option: $1 - this should not happen."
+        _context_usage
+        return
+      ;;
+    esac
+  done
+
+  # input validation
+  [ "$HELP"  = "1" ] && { _context_usage      ; return ;}
+  [ "$CLEAR" = "1" ] && { _context_clear_vars ; return ;}
+
+  case "$PROJECT" in
+    sisu)  ;;
+    tmnf)  ;;
+    *) echo "Unknown project"
+      _context_usage
+      return 1 ;;
+  esac
+
+  case "$REGION" in
+    eu) ;;
+    jp) ;;
+    *) echo "Unknown region"
+      _context_usage
+      return 1 ;;
+  esac
+
+  case "$NOMAD_NAMESPACE" in
+    default) ;;
+    infra) ;;
+    *) echo "Unknown namespace"
+      _context_usage
+      return 1 ;;
+  esac
+
+  SHORT_ENV="$(_context_short "$ENVIRONMENT")" || { echo "Unknown environment" ; _context_usage ; return 1 ;}
+  ### end validation
+
+  nomad_host="$(_context_nomad_host "$PROJECT" "$ENVIRONMENT" "$REGION")"
+
+  if [[ "$ENVIRONMENT" =~ ^sb- ]]; then
+    if [[ -v NOMAD_TOKEN ]] ; then
+      echo "Using NOMAD_TOKEN from current environment" >/dev/stderr
+    else
+      try_to_get_nomad_mgmt_token_from_sandbox "$ENVIRONMENT"
+    fi
+  else
+    NOMAD_TOKEN="$(vault kv get -field=bootstrap-token \
+      "covert/infrastructure/nomad/${PROJECT}-${SHORT_ENV}-${REGION}/mgmt-token")"
+  fi
+
+  NOMAD_ADDR="$(vault kv get -format=json \
+    "covert/apps/platform/nomad/${PROJECT}-${SHORT_ENV}-${REGION}/basic-auth" \
+    | jq -r ".data.data | \"https://\(.username):\(.password)@${nomad_host}\"")"
+
+  export NOMAD_CONTEXT="${PROJECT}-${SHORT_ENV}-${REGION}"
+  export NOMAD_NAMESPACE
+  export NOMAD_ADDR
+  export NOMAD_TOKEN
+  export PS1="\n\[\033[1;32m\][nix-shell \$(echo -n \$NOMAD_CONTEXT)-\$(echo -n \$NOMAD_NAMESPACE)]\n\w $ \[\033[0m\]"
+}
