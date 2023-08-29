@@ -124,7 +124,7 @@ set-nomad-context() {
     if [[ -v NOMAD_TOKEN ]] ; then
       echo "Using NOMAD_TOKEN from current environment" >/dev/stderr
     else
-      _context_try_to_get_nomad_mgmt_token_from_sandbox "$ENVIRONMENT"
+      NOMAD_TOKEN=$(_context_try_to_get_nomad_mgmt_token_from_sandbox "$ENVIRONMENT")
     fi
   else
     NOMAD_TOKEN="$(vault kv get -field=bootstrap-token \
