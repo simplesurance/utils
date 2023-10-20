@@ -39,7 +39,7 @@ if [ -f "$cursor_file" ]; then
 fi
 
 set +e
-log="$(journalctl $args | grep -v 'SRV-2-SRV:' | grep -v 'Spectre v2 mitigation leaves CPU vulnerable to RETBleed attacks')"
+log="$(journalctl $args | grep -v 'SRV-2-SRV:' | grep -v 'Spectre v2 mitigation leaves CPU vulnerable to RETBleed attacks' | grep -v 'Speculative Return Stack Overflow')"
 rv=$?
 set -e
 
