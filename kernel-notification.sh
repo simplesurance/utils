@@ -39,7 +39,7 @@ if [ -f "$cursor_file" ]; then
 fi
 
 set +e
-log="$(journalctl $args)"
+log="$(journalctl $args | grep -v 'Speculative Return Stack Overflow')"
 rv=$?
 set -e
 
