@@ -37,11 +37,7 @@ _context_nomad_host() {
 	fi
 
   s="$(_context_short "${env}")"
-	if [ "$prj" = "tmnf" ]; then
-		echo "${prj}-nomad-${s}-${reg}.sisu.sh"
-	else
-		echo "nomad-${s}-${reg}.sisu.sh"
-	fi
+	echo "${prj}-${s}-${reg}-nomad.sisu.sh"
 }
 
 _context_try_to_get_nomad_mgmt_token_from_sandbox() {
