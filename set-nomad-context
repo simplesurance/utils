@@ -6,6 +6,7 @@ _context_usage() {
 	echo "Usage: set-nomad-context [OPTION]... -e ENV -p PROJECT -r REGION -n NAMESPACE
 
 Mandatory Arguments:
+  -s, --short <sisu|tmnf>-<prd|stg|ci>-<eu|jp>
   -e, --environment staging|production|<sandbox-name>
   -p, --project sisu|tmnf
   -r, --region eu|jp
@@ -18,6 +19,9 @@ Options:
 
 _context_short() {
 	case "$1" in
+    prd) echo "prd";;
+    stg) echo "stg";;
+    ci) echo "ci";;
 		staging) echo "stg" ;;
 		production) echo "prd" ;;
 		sb-*) echo "sandbox" ;;
@@ -61,8 +65,8 @@ set-nomad-context() {
   local CLEAR=0
   NOMAD_NAMESPACE="default"
 
-  parsed_arguments=$(getopt -a -n set-nomad-context -o che:p:r:n: \
-    --long clear,help,environment:,project:,region:,namespace: -- "$@") \
+  parsed_arguments=$(getopt -a -n set-nomad-context -o che:p:r:n:s: \
+    --long clear,help,environment:,project:,region:,namespace:short: -- "$@") \
     || { _context_usage ; return 1 ;}
   eval set -- "$parsed_arguments"
 
@@ -75,6 +79,11 @@ set-nomad-context() {
       -p | --project)      PROJECT="$2"         ; shift 2 ;;
       -r | --region)       REGION="$2"          ; shift 2 ;;
       -n | --namespace)    NOMAD_NAMESPACE="$2" ; shift 2 ;;
+      -s | --short)
+          short_vpc="$2"
+          shift 2
+          read -r PROJECT ENVIRONMENT REGION <<< "$(echo "$short_vpc" | awk -F '-' '{print $1, $2, $3}' )"
+      ;;
       --) shift; break ;;
       *) echo "Unexpected option: $1 - this should not happen."
         _context_usage
