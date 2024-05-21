@@ -125,16 +125,8 @@ set-nomad-context() {
 
   nomad_host="$(_context_nomad_host "$PROJECT" "$ENVIRONMENT" "$REGION")"
 
-  if [[ "$ENVIRONMENT" =~ ^sb- ]]; then
-    if [[ -v NOMAD_TOKEN ]] ; then
-      echo "Using NOMAD_TOKEN from current environment" >/dev/stderr
-    else
-      NOMAD_TOKEN=$(_context_try_to_get_nomad_mgmt_token_from_sandbox "$ENVIRONMENT")
-    fi
-  else
-    NOMAD_TOKEN="$(vault kv get -field=bootstrap-token \
-      "covert/infrastructure/nomad/${PROJECT}-${SHORT_ENV}-${REGION}/mgmt-token")"
-  fi
+  NOMAD_TOKEN="$(vault kv get -field=bootstrap-token \
+    "covert/infrastructure/nomad/${PROJECT}-${SHORT_ENV}-${REGION}/mgmt-token")"
 
   NOMAD_ADDR="$(vault kv get -format=json \
     "covert/apps/platform/nomad/${PROJECT}-${SHORT_ENV}-${REGION}/basic-auth" \
